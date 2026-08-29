@@ -1,0 +1,10 @@
+build/
+obj/
+bin/
+*.user
+*.suo
+
+# Never commit the game assemblies - they are proprietary Team Cherry /
+# third-party binaries and are referenced from the local install instead.
+*.dll
+*.pdb
