@@ -29,7 +29,7 @@ Instead of `HeroController.instance`, the target is chosen by live distance:
 3. `AggroHooks` swaps the chosen player into the action's target field, runs the vanilla
    logic, then restores the old value.
 
-Hooked actions (all verified present in this install's `Assembly-CSharp.dll`):
+Hooked actions (all verified present in the game's `Assembly-CSharp.dll`):
 
 | Action | Hook point | Field swapped |
 | --- | --- | --- |
@@ -59,21 +59,56 @@ Two deliberate choices:
 - No networking. HKMP disables enemy FSMs on non-host clients, so these hooks only ever fire
   on the machine that simulates the enemy. The decision is local and needs no agreement.
 
-## Build
+## Turning it on and off
 
-Needs no .NET SDK — it uses the compiler shipped with Windows.
+Three independent levels, from softest to hardest:
+
+1. **`/aggro on` / `/aggro off`** in the in-game chat. Instant, no restart. Hooks stay
+   attached but return early.
+2. **HKMP's `/addon` toggle.** The addon derives from `TogglableClientAddon`, so HKMP can
+   switch it at runtime; this physically detaches the hooks.
+3. **Lumafly's toggle.** Moves the folder to `Mods/Disabled/`. Needs a game restart.
+
+HKMP itself is never modified at any level, so there is nothing to revert.
+
+## Chat commands
+
+| Command | Effect |
+| --- | --- |
+| `/aggro` | Show current state |
+| `/aggro on` or `/aggro off` | Master switch |
+| `/aggro self on` or `off` | Whether your own Knight is a valid target |
+| `/aggro cooldown 0.75` | Seconds before an enemy may re-target |
+| `/aggro ratio 0.8` | How much closer a rival must be to steal aggro |
+| `/aggro debug on` or `off` | Log every switch to `ModLog.txt` |
+
+`/aggro` with no arguments also reports when it is idle — hooks detached, or no other
+player in the room.
+
+## Build and install
+
+Needs no .NET SDK; it uses the C# compiler shipped with Windows.
 
 ```powershell
-.\build.ps1     # -> build\HkmpDynamicAggro.dll
-.\install.ps1   # -> Mods\HkmpDynamicAggro\
+.\build.ps1
+.\install.ps1
 ```
 
-Both players must install it. Uninstall by deleting the `Mods\HkmpDynamicAggro` folder.
+`build.ps1` writes `build/HkmpDynamicAggro.dll`; `install.ps1` copies it into
+`Mods/HkmpDynamicAggro/`.
+
+`FindManaged.ps1` locates the game through the Steam registry key and
+`libraryfolders.vdf`, so it works across drives and machines. Override with
+`$env:HK_MANAGED` for a non-Steam install.
+
+Both players must install it. Uninstall by deleting the `Mods/HkmpDynamicAggro` folder.
+
+Game assemblies are deliberately not committed — the build references your local install.
 
 ## Settings
 
-`AppData\LocalLow\Team Cherry\Hollow Knight\HkmpDynamicAggro.GlobalSettings.json`,
-created on first run.
+`AppData/LocalLow/Team Cherry/Hollow Knight/HkmpDynamicAggro.GlobalSettings.json`,
+created on first run. The chat command writes to the same place.
 
 | Key | Default | Meaning |
 | --- | --- | --- |
@@ -91,5 +126,9 @@ created on first run.
   component, not a swappable field, so initial *detection* still keys off the scene host.
   Once an enemy is awake and chasing, targeting is dynamic. Making wake-up dynamic too
   means patching the detector, which is a larger change.
+- Settings changed from chat are flushed via an *internal* Modding API method reached by
+  reflection. If that ever stops resolving, the change still applies for the session and is
+  written out on the API's own schedule; nothing breaks.
 - Built and verified against **HKMP 2.4.3.0**. The hooks target vanilla PlayMaker actions,
   so they should survive HKMP updates; an HKMP API change would break `HkmpAddon` only.
+- Compiles and loads cleanly; **in-game behaviour is not yet playtested.**

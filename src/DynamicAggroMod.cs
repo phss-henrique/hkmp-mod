@@ -27,8 +27,9 @@ namespace HkmpDynamicAggro
         {
             Instance = this;
 
+            // Hooks are attached from the addon's Initialize/OnEnable, so that HKMP's
+            // /addon toggle genuinely detaches them rather than leaving them inert.
             ClientAddon.RegisterAddon(new HkmpAddon());
-            AggroHooks.Register();
 
             // Enemies do not survive a scene change, so their tracked aggro should not either.
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;

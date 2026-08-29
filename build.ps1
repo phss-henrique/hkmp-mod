@@ -3,12 +3,12 @@
 
 $ErrorActionPreference = "Stop"
 
-$Managed = "D:\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed"
+. (Join-Path $PSScriptRoot "FindManaged.ps1")
+$Managed = Get-ManagedFolder
 $Csc     = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
 $OutDir  = Join-Path $PSScriptRoot "build"
 $Out     = Join-Path $OutDir "HkmpDynamicAggro.dll"
 
-if (-not (Test-Path $Managed)) { throw "Managed folder not found: $Managed" }
 if (-not (Test-Path $OutDir))  { New-Item -ItemType Directory $OutDir | Out-Null }
 
 $refs = @(
@@ -35,3 +35,4 @@ $argList = @("/target:library", "/nostdlib+", "/noconfig", "/optimize+", "/out:`
 if ($LASTEXITCODE -ne 0) { throw "Build failed" }
 
 Write-Output "Built $Out"
+Write-Output "  against $Managed"

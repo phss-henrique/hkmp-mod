@@ -23,8 +23,23 @@ namespace HkmpDynamicAggro
     /// </summary>
     public static class AggroHooks
     {
+        // Register/Deregister are driven both by mod startup and by HKMP enabling or
+        // disabling the addon at runtime, so they have to be safe to call twice.
+        private static bool _registered;
+
+        public static bool Registered
+        {
+            get { return _registered; }
+        }
+
         public static void Register()
         {
+            if (_registered)
+            {
+                return;
+            }
+            _registered = true;
+
             On.HutongGames.PlayMaker.Actions.ChaseObject.OnFixedUpdate += ChaseObjectOnFixedUpdate;
             On.HutongGames.PlayMaker.Actions.ChaseObjectV2.OnFixedUpdate += ChaseObjectV2OnFixedUpdate;
             On.HutongGames.PlayMaker.Actions.ChaseObjectGround.OnFixedUpdate += ChaseObjectGroundOnFixedUpdate;
@@ -36,6 +51,12 @@ namespace HkmpDynamicAggro
 
         public static void Deregister()
         {
+            if (!_registered)
+            {
+                return;
+            }
+            _registered = false;
+
             On.HutongGames.PlayMaker.Actions.ChaseObject.OnFixedUpdate -= ChaseObjectOnFixedUpdate;
             On.HutongGames.PlayMaker.Actions.ChaseObjectV2.OnFixedUpdate -= ChaseObjectV2OnFixedUpdate;
             On.HutongGames.PlayMaker.Actions.ChaseObjectGround.OnFixedUpdate -= ChaseObjectGroundOnFixedUpdate;

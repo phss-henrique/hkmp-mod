@@ -4,7 +4,8 @@
 $ErrorActionPreference = "Stop"
 
 $Dll  = Join-Path $PSScriptRoot "build\HkmpDynamicAggro.dll"
-$Dest = "D:\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\HkmpDynamicAggro"
+. (Join-Path $PSScriptRoot "FindManaged.ps1")
+$Dest = Join-Path (Get-ManagedFolder) "Mods\HkmpDynamicAggro"
 
 if (-not (Test-Path $Dll)) { throw "Not built yet. Run build.ps1 first." }
 if (-not (Test-Path $Dest)) { New-Item -ItemType Directory $Dest | Out-Null }
